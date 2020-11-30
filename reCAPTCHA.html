@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <title>reCAPTCHA</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans TC', sans-serif;
+      }
+
+      html,
+      body {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .game {
+        width: 430px;
+        height: 600px;
+        background-color: rgb(255, 255, 255);
+        /* margin: auto; */
+        font-size: 0;
+        position: relative;
+        border: 5px solid white;
+        box-shadow: 0px 0px 15px rgb(145, 145, 145);
+        /* transform-style: preserve-3d; */
+      }
+
+      .top {
+        background-color: #4a90e2;
+        width: 100%;
+        height: 130px;
+      }
+
+      .container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        transform-style: preserve-3d;
+      }
+
+      .footer {
+        width: 100%;
+        height: 47px;
+        background-color: white;
+        position: relative;
+        bottom: 0;
+        border-top: 1px solid rgb(202, 202, 202);
+        font-size: 12px;
+      }
+
+      .card {
+        width: 100px;
+        height: 100px;
+        margin: 3px;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: all 0.5s;
+      }
+
+      .back {
+        width: 100%;
+        height: 100%;
+        background-image: url(./mycards/card_back.jpg);
+        position: absolute;
+        transform: rotateY(180deg);
+      }
+
+      .front {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        background-size: contain;
+      }
+
+      .close {
+        transform: rotateY(180deg);
+      }
+
+      .text {
+        width: 100%;
+        color: white;
+        font-size: 10px;
+        padding: 30px;
+        letter-spacing: 1px;
+        font-weight: 300;
+      }
+
+      .text h1 {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      #btn-start {
+        background: #4a90e2;
+        color: white;
+        height: 38px;
+        border-radius: 2px;
+        border: 0;
+        padding: 0px 18px;
+        font-weight: 300;
+        font-size: 13px;
+        cursor: pointer;
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      #btn-start:hover {
+        filter: brightness(92%);
+      }
+
+      .footer-p {
+        width: calc(100% - 100px);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+        color: #4a90e2;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .footer img {
+        width: 38px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 15px;
+        cursor: pointer;
+      }
+
+      .footer img:hover {
+        filter: brightness(50%);
+      }
+
+      .grayscale {
+        filter: grayscale(100%);
+        cursor: not-allowed !important;
+      }
+
+      .disabled-cursor {
+        pointer-events: none;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="game">
+      <div class="top">
+        <div class="text">
+          <p>配對圖片中</p>
+          <h1>近似人物</h1>
+          <p>的所有圖片</p>
+        </div>
+      </div>
+      <div class="container"></div>
+      <div class="footer">
+        <img id="refresh" src="./mycards/refresh.png" alt="" />
+        <input id="btn-start" type="button" value="開始遊戲" />
+        <div class="footer-p">
+          <p id="p1">分數 :</p>
+          <p id="p2">倒數時間</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="./jquery-3.5.1.min.js"></script>
+    <script>
+      $('#refresh').on('click', function () {
+        // 重新整理按鈕
+        location.reload()
+      })
+
+      const totalCards = 16
+
+      for (let i = 0; i < totalCards; i++) {
+        $('.container').append(
+          `
+        <div class="card close">
+          <div class="back"></div>
+          <div class="front"></div>
+          </div>
+          `
+        )
+
+        const number = (i % (totalCards / 2)) + 1
+        $('.card').eq(i).find('.front').css('background-image', `url(./mycards/${i}.jpg`)
+
+        $('.card').eq(i).attr('data-card', number) // 添加 data-card 屬性
+
+        const target = Math.floor(Math.random() * $('.card').length) // 取得 0 - 16 之間的隨機整數
+        $('.card').eq(target).insertAfter($('.card').eq(i)) // 插入 隨機生成的圖片在原本圖片上)
+      }
+
+      let timeLeft = 100 // 遊戲倒數時間
+      let score = 0 // 獲得分數
+      $('#p1').text(`分數 : ${score}`)
+
+      // 點選開始遊戲按鈕後
+      $('#btn-start').on('click', function () {
+        $(this).attr('disabled', true) // 按下按鈕後 停止按鈕功能
+        $(this).addClass('grayscale')
+
+        let timer = setInterval(() => {
+          $('#p2').text(`${timeLeft}s`)
+          timeLeft--
+
+          if (timeLeft < 0) {
+            clearInterval(timer)
+            $('#p2').text('遊戲結束')
+            $(this).removeClass('grayscale') // 回復按鈕顏色
+            $('.container').addClass('grayscale disabled-cursor') // 添加滑鼠禁用css
+          }
+        }, 1000)
+
+        $('.container').on('click', '.card', function () {
+          if ($('.card:not(.close)').length < 2) {
+            $(this).removeClass('close')
+          }
+
+          // 若點選了兩個翻牌
+          if ($('.card:not(.close').length == 2) {
+            if (
+              // 若兩張牌的 data-card 一樣
+              $('.card:not(.close').eq(0).attr('data-card') == $('.card:not(.close').eq(1).attr('data-card')
+            ) {
+              // 淡出 並且在淡出的牌上添加 clear 的 class
+              $('.card:not(.close').fadeTo(500, 0).addClass('clear')
+              // 分數增加
+              score++
+              $('#p1').text(`分數 : ${score}`)
+            }
+
+            // 點選了兩個翻牌後，過一秒翻回來
+            setTimeout(() => {
+              $('.card:not(.close').addClass('close')
+            }, 1000)
+          }
+
+          // 若全部的牌都已經添加了 clear class ， 一秒鐘後彈出過關視窗
+          if ($('.clear').length == totalCards) {
+            setTimeout(() => {
+              alert('過關')
+              clearInterval(timer)
+            }, 1000)
+          }
+        })
+      })
+    </script>
+  </body>
+</html>
